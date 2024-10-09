@@ -76,4 +76,11 @@ class DataStatistics:
         stock_data['dx'] = (np.abs(stock_data['positive_directional_indicator'] - stock_data['negative_directional_indicator'])/
                             (stock_data['positive_directional_indicator'] + stock_data['negative_directional_indicator'])) * 100
         stock_data['adx'] = stock_data['dx'].rolling(adx_window).mean()
+        stock_data['cross_over'] = np.where((stock_data['positive_directional_indicator']>stock_data['negative_directional_indicator']) &
+                                            (stock_data['positive_directional_indicator'].shift(1)<=stock_data['negative_directional_indicator'].shift(1)) &
+                                            (stock_data['adx']>20), 1, 0)
+        stock_data['cross_over'] = np.where((stock_data['positive_directional_indicator']<stock_data['negative_directional_indicator']) &
+                                            (stock_data['positive_directional_indicator'].shift(1)>=stock_data['negative_directional_indicator'].shift(1)) &
+                                            (stock_data['adx']>20), -1, 0) + stock_data['cross_over']
         return stock_data
+
