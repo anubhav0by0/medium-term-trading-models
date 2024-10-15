@@ -1,4 +1,5 @@
 import numpy as np
+import cvxpy as cp
 def get_binomial_tree(initial_price, step_size):
     u = initial_price
     u1 = initial_price + step_size
@@ -26,7 +27,6 @@ class TradeIndicators:
                 initial_stock_price_at_cross_over = stock_prices.iloc[i]['close']
                 if step_type == 'ATR':
                     step_size = stock_prices.iloc[i]['atr']/2
-                    # print('ATR :', stock_prices.iloc[i]['atr'])
                 elif step_type == 'EWMA_VOL':
                     step_size = stock_prices.iloc[i]['ewma_vol_step']
                 else:
@@ -58,18 +58,33 @@ class TradeIndicators:
                                 u01_counter+=1
                                 break
                         j += 1
-                    i = j
                     break
 
         # We calculate the probability of the counter being hit when the positive crossover point is hit
-        u1_counter_prob = u1_counter/np.sum(stock_prices['cross_over'] == 1)
+        # u1_counter_prob = u1_counter/np.sum(stock_prices['cross_over'] == 1)
         u11_counter_prob = u11_counter/np.sum(stock_prices['cross_over'] == 1)
         u10_counter_prob = u10_counter / np.sum(stock_prices['cross_over'] == 1)
-        u0_counter_prob = u0_counter / np.sum(stock_prices['cross_over'] == 1)
+        # u0_counter_prob = u0_counter / np.sum(stock_prices['cross_over'] == 1)
         u00_counter_prob = u00_counter / np.sum(stock_prices['cross_over'] == 1)
         u01_counter_prob = u01_counter / np.sum(stock_prices['cross_over'] == 1)
         cross_over_probability_matrix = [u11_counter_prob, u10_counter_prob, u00_counter_prob, u01_counter_prob]
+        cross_over_probability_matrix /= sum(cross_over_probability_matrix)
         return cross_over_probability_matrix
 
 
+def expectancy_maximise(crossover_prob, prices, max_loss, max_qty):
+    qty = cp.Variable(7)
+    profit_const = np.array([[1, 1, 0, 1, 0, 0, 0],
+                             [1, 1, 0, 0, 1, 0, 0],
+                             [1, 0, 1, 0, 0, 1, 0],
+                             [1, 0, 1, 0, 0, 0, 1]])
 
+    objective = cp.Minimize(cp.sum((crossover_prob.reshape(-1, 1) * profit_const * prices) @ qty))
+    prob = cp.Problem(objective, [profit_const * prices @ qty <= max_loss, profit_const @ qty == 0, qty >= -max_qty,
+                                  qty <= max_qty])
+
+    prob.solve(solver=cp.SCIP, verbose=False)
+    oqty = qty.value * -1
+    expectancy = prob.value * -1
+    scenario_profits = (profit_const * prices) @ oqty
+    return oqty, scenario_profits, expectancy
