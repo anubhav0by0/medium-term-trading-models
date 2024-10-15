@@ -1,3 +1,3 @@
 # medium-term-trading-models
-Develop, test and commit a momentum based sector rotation strategy.
+Trade volume optimization for USD-BTC trade using ADX, linear optimization and stochastic processes.
 The respository consists of the final Capstone project that will be built for submission to WQU
