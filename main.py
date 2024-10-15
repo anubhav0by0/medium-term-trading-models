@@ -3,6 +3,7 @@ from matplotlib.widgets import Slider
 
 from utils.datareader import read_input_data
 from utils.datastats import *
+from utils.tradelogic import TradeIndicators
 
 
 def update_plots(start_idx=0):
@@ -36,12 +37,20 @@ def augment_stock_statistical_information(stock_data):
     stock_data['hourly_log_returns'] = stats_generator.generate_log_return()
     stock_data['rolling_vol'] = stats_generator.generate_rolling_volatility()
     stock_data['ewma_vol'] = stats_generator.generate_ewma_volatility()
+    stock_data['ewma_vol_step'] = stock_data['ewma_vol'] * stock_data['close']
     stock_data = stats_generator.generate_rolling_directional_indicator()
     return stock_data
 
+def augment_stock_trade_indicators(stock_data):
+    trade_indicator = TradeIndicators(stock_prices=stock_data, step_type='ATR')
+    # print(trade_indicator.check_price_path_probabilities())
+    return trade_indicator.check_price_path_probabilities()
+
+
 security_data = read_input_data('input_data/Bitfinex_BTCUSD_1h.csv')
 security_data = augment_stock_statistical_information(security_data)
-# security_data.to_csv('usd_btc.csv', index = False)
+print(augment_stock_trade_indicators(security_data))
+security_data.to_csv('usd_btc.csv', index = False)
 
 fig, ax = plt.subplots(4, 1, figsize=(8, 15), sharex=True, linewidth=0.5)
 fig.subplots_adjust(bottom=0.2)

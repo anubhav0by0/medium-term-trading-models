@@ -82,5 +82,8 @@ class DataStatistics:
         stock_data['cross_over'] = np.where((stock_data['positive_directional_indicator']<stock_data['negative_directional_indicator']) &
                                             (stock_data['positive_directional_indicator'].shift(1)>=stock_data['negative_directional_indicator'].shift(1)) &
                                             (stock_data['adx']>20), -1, 0) + stock_data['cross_over']
+        stock_data['trade_cycle'] = stock_data['cross_over']
+        stock_data['trade_cycle'] = stock_data['trade_cycle'].replace(0, np.nan)
+        stock_data['trade_cycle'] = stock_data['trade_cycle'].ffill(axis=0)
         return stock_data
 
