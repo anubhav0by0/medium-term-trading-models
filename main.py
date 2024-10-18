@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
-import pandas as pd
 from matplotlib.widgets import Slider
-
 from utils.datareader import read_input_data
 from utils.datastats import DataStatistics
-from utils.tradelogic import TradeIndicators, expectancy_maximise, generate_profit
+from utils.tradelogic import TradeIndicators, generate_profit
 
 
 def update_plots(start_idx=0):
@@ -57,11 +55,11 @@ max_qty = 100
 profits, exp, cross_over_stock_prices = generate_profit(cross_over_stock_prices, 'ATR', max_loss, max_qty,
                                                 neg_node2_cross_over_probability, pos_node2_cross_over_probability)
 
-comparision_df = security_data.join(cross_over_stock_prices[['u1', 'u0', 'u11', 'u10', 'u01', 'u00','trade_profit','expected_profit']], how='left')
-comparision_df['Cumulative_profits'] = comparision_df['trade_profit'].cumsum()
-comparision_df['Cumulative_expected_profit'] = comparision_df['expected_profit'].cumsum()
+comparison_df = security_data.join(cross_over_stock_prices[['u1', 'u0', 'u11', 'u10', 'u01', 'u00', 'trade_profit', 'expected_profit']], how='left')
+comparison_df['Cumulative_profits'] = comparison_df['trade_profit'].cumsum()
+comparison_df['Cumulative_expected_profit'] = comparison_df['expected_profit'].cumsum()
 
-comparision_df[['close','Cumulative_expected_profit']].plot()
+comparison_df[['close', 'Cumulative_expected_profit']].plot()
 # cross_over_stock_prices.to_csv('cross.csv')
 
 #Plotting the graph
