@@ -133,6 +133,7 @@ class TradeIndicators:
 def generate_profit(cross_over_stock_prices, step_type, max_loss, max_qty, neg_crossover_prob, pos_crossover_prob):
     profits_array = []
     expected_prob_array = []
+    cross_over_stock_prices = cross_over_stock_prices[cross_over_stock_prices['cross_over'] != 0].copy()
     for i in range(len(cross_over_stock_prices)):
         if step_type == 'ATR':
             step_size = cross_over_stock_prices.iloc[i]['atr'] / 2
@@ -146,24 +147,26 @@ def generate_profit(cross_over_stock_prices, step_type, max_loss, max_qty, neg_c
         u11_ind, u10_ind, u01_ind, u00_ind = cross_over_stock_prices.iloc[i][['u11', 'u10', 'u01', 'u00']]
         if cross_over_stock_prices.iloc[i]['cross_over'] == 1:
             quantity, scenario_profits, exp = expectancy_maximise(pos_crossover_prob, prices, max_loss, max_qty)
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i], 'expected_profit'] = exp
             expected_prob_array.append(exp)
             scenario_profits = scenario_profits.astype(int)
 
         elif cross_over_stock_prices.iloc[i]['cross_over'] == -1:
             quantity, scenario_profits, exp = expectancy_maximise(neg_crossover_prob, prices, max_loss, max_qty)
-            cross_over_stock_prices['expected_profit'] = exp
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i],'expected_profit'] = exp
+            expected_prob_array.append(exp)
             scenario_profits = scenario_profits.astype(int)
         if u11_ind:
-            cross_over_stock_prices['trade_profit'] = scenario_profits[0]
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i],'trade_profit'] = scenario_profits[0]
             profits_array.append(scenario_profits[0])
         elif u10_ind:
-            cross_over_stock_prices['trade_profit'] = scenario_profits[1]
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i],'trade_profit'] = scenario_profits[1]
             profits_array.append(scenario_profits[1])
         elif u01_ind:
-            cross_over_stock_prices['trade_profit'] = scenario_profits[2]
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i],'trade_profit'] = scenario_profits[2]
             profits_array.append(scenario_profits[2])
         elif u00_ind:
-            cross_over_stock_prices['trade_profit'] = scenario_profits[3]
+            cross_over_stock_prices.at[cross_over_stock_prices.index[i],'trade_profit'] = scenario_profits[3]
             profits_array.append(scenario_profits[3])
     return profits_array, expected_prob_array, cross_over_stock_prices
 def expectancy_maximise(crossover_prob, prices, max_loss, max_qty):

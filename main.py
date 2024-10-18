@@ -48,19 +48,25 @@ def augment_stock_trade_indicators(stock_data):
 
 security_data = read_input_data('input_data/Bitfinex_BTCUSD_1h.csv')
 security_data = augment_stock_statistical_information(security_data)
-pos_node2_cross_over_probability, neg_node2_cross_over_probability, cross_over_stock_prices = (
-    augment_stock_trade_indicators(security_data))
-max_loss = 5000
-max_qty = 100
+#splitting into the test_train data. We use the data of 2020-2023 as the training dataset
+# WE use the period for 2024 as the test set
+training_data = security_data[security_data.index.year.isin([2020, 2023])].copy()
+test_data = security_data[security_data.index.year == 2024].copy()
+pos_node2_cross_over_probability, neg_node2_cross_over_probability, _ = augment_stock_trade_indicators(training_data)
+_, _, cross_over_stock_prices = (augment_stock_trade_indicators(test_data))
+
+
+max_loss = 2100
+max_qty = 1
 profits, exp, cross_over_stock_prices = generate_profit(cross_over_stock_prices, 'ATR', max_loss, max_qty,
                                                 neg_node2_cross_over_probability, pos_node2_cross_over_probability)
 
-comparison_df = security_data.join(cross_over_stock_prices[['u1', 'u0', 'u11', 'u10', 'u01', 'u00', 'trade_profit', 'expected_profit']], how='left')
+comparison_df = test_data.join(cross_over_stock_prices[['u1', 'u0', 'u11', 'u10', 'u01', 'u00', 'trade_profit', 'expected_profit']], how='left')
 comparison_df['Cumulative_profits'] = comparison_df['trade_profit'].cumsum()
-comparison_df['Cumulative_expected_profit'] = comparison_df['expected_profit'].cumsum()
+comparison_df['Cumulative_expected_profit'] = comparison_df['expected_profit'].cumsum()+42331
 
-comparison_df[['close', 'Cumulative_expected_profit']].plot()
-# cross_over_stock_prices.to_csv('cross.csv')
+comparison_df[['Cumulative_profits', 'Cumulative_expected_profit']].plot()
+cross_over_stock_prices.to_csv('cross.csv')
 
 #Plotting the graph
 fig, ax = plt.subplots(4, 1, figsize=(8, 15), sharex=True, linewidth=0.5)
