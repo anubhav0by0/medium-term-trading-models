@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.widgets import Slider
 
 from utils.datareader import read_input_data
-from utils.datastats import *
-from utils.tradelogic import TradeIndicators
+from utils.datastats import DataStatistics
+from utils.tradelogic import TradeIndicators, expectancy_maximise, generate_profit
 
 
 def update_plots(start_idx=0):
@@ -49,13 +50,25 @@ def augment_stock_trade_indicators(stock_data):
 
 security_data = read_input_data('input_data/Bitfinex_BTCUSD_1h.csv')
 security_data = augment_stock_statistical_information(security_data)
-print(augment_stock_trade_indicators(security_data))
-security_data.to_csv('usd_btc.csv', index = False)
+pos_node2_cross_over_probability, neg_node2_cross_over_probability, cross_over_stock_prices = (
+    augment_stock_trade_indicators(security_data))
+max_loss = 5000
+max_qty = 100
+profits, exp, cross_over_stock_prices = generate_profit(cross_over_stock_prices, 'ATR', max_loss, max_qty,
+                                                neg_node2_cross_over_probability, pos_node2_cross_over_probability)
 
+comparision_df = security_data.join(cross_over_stock_prices[['u1', 'u0', 'u11', 'u10', 'u01', 'u00','trade_profit','expected_profit']], how='left')
+comparision_df['Cumulative_profits'] = comparision_df['trade_profit'].cumsum()
+comparision_df['Cumulative_expected_profit'] = comparision_df['expected_profit'].cumsum()
+
+comparision_df[['close','Cumulative_expected_profit']].plot()
+# cross_over_stock_prices.to_csv('cross.csv')
+
+#Plotting the graph
 fig, ax = plt.subplots(4, 1, figsize=(8, 15), sharex=True, linewidth=0.5)
 fig.subplots_adjust(bottom=0.2)
 update_plots()
-ax_timerange = fig.add_axes([0.1, 0.1, 0.85, 0.01])
+ax_timerange = fig.add_axes((0.1, 0.1, 0.85, 0.01))
 datetime_slider = Slider(ax=ax_timerange, label='Start', valmin=0, valmax=len(security_data)-1, valinit=0, valstep=1)
 datetime_slider.on_changed(update_slider)
 plt.show()

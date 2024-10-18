@@ -1,7 +1,14 @@
 import numpy as np
 import pandas as pd
 from arch import arch_model
-
+def get_binomial_tree(initial_price, step_size):
+    u = initial_price
+    u1 = initial_price + step_size
+    u0 = initial_price - step_size
+    u11 = u1 + step_size
+    u00 = u0 - step_size
+    binomial_tree = [u, u1, u0, u11, u00]
+    return binomial_tree
 
 class DataStatistics:
     def __init__(self, stock_dataframe, rolling_window = 10, forecast_period = 10, adx_window = 24, ewma_lambda = 0.98):
@@ -86,4 +93,5 @@ class DataStatistics:
         stock_data['trade_cycle'] = stock_data['trade_cycle'].replace(0, np.nan)
         stock_data['trade_cycle'] = stock_data['trade_cycle'].ffill(axis=0)
         return stock_data
+
 
